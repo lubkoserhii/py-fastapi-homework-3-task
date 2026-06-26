@@ -284,7 +284,14 @@ async def refresh_access_token(
             detail="Refresh token not found."
         )
 
-    user_stmt = select(UserModel).where(UserModel.id == token_payload.get("user_id"))
+    token_user_id = token_payload.get("user_id")
+    if refresh_token_record.user_id != token_user_id:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Refresh token does not belong to this user."
+        )
+
+    user_stmt = select(UserModel).where(UserModel.id == token_user_id)
     user_result = await db.execute(user_stmt)
     user = user_result.scalars().first()
 
